@@ -1,0 +1,580 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adda Saranya - Portfolio</title>
+    <!-- Add Boxicons CDN for social icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: #0a1a2e;
+            color: #fff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        nav {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin: 0 1.5rem;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #00f6ff;
+        }
+
+        section {
+            padding: 5rem 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #00f6ff;
+            text-shadow: 0 0 10px #00f6ff;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-align: center;
+        }
+
+        p {
+            max-width: 600px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 2rem;
+            background: #00f6ff;
+            color: #0a1a2e;
+            text-decoration: none;
+            border-radius: 25px;
+            box-shadow: 0 0 10px #00f6ff;
+            transition: transform 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        #home {
+            text-align: center;
+        }
+
+        #about {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #about img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 5px solid #00f6ff;
+            box-shadow: 0 0 15px #00f6ff;
+            object-fit: cover;
+        }
+
+        #about .about-content {
+            max-width: 600px;
+            text-align: left;
+        }
+
+        #about .about-content p {
+            text-align: left;
+        }
+
+        #services {
+            text-align: center;
+        }
+
+        .service-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 246, 255, 0.3);
+        }
+
+        .service-card i {
+            font-size: 2rem;
+            color: #00f6ff;
+            margin-bottom: 1rem;
+        }
+
+        .service-card p {
+            text-align: center;
+        }
+
+        #skills {
+            text-align: center;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .skill-category {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .skill-category h3 {
+            text-align: left;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #fff;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .skill-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .skill-bar img {
+            width: 30px;
+            height: 30px;
+            margin-right: 1rem;
+            object-fit: contain;
+        }
+
+        .skill-bar p {
+            width: 100px;
+            margin-right: 1rem;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .bar {
+            flex: 1;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .bar div {
+            height: 100%;
+            background: #00f6ff;
+            box-shadow: 0 0 5px #00f6ff;
+        }
+
+        .skill-bar span {
+            margin-left: 1rem;
+            font-size: 1rem;
+        }
+
+        .circle-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .circle {
+            width: 120px;
+            height: 120px;
+            border: 5px solid #00f6ff;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 10px #00f6ff;
+            text-align: center;
+        }
+
+        .circle span {
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        #projects {
+            text-align: center;
+        }
+
+        .project-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 300px;
+            text-align: left;
+            box-shadow: 0 0 10px rgba(0, 246, 255, 0.3);
+        }
+
+        .project-card h3 {
+            text-align: left;
+        }
+
+        .project-card p {
+            text-align: left;
+        }
+
+        #contact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .contact-info {
+            text-align: left;
+        }
+
+        .contact-info h3 {
+            text-align: left;
+        }
+
+        .contact-info p {
+            text-align: left;
+        }
+
+        .contact-info a {
+            color: #00f6ff;
+            text-decoration: none;
+        }
+
+        .contact-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 10px rgba(0, 246, 255, 0.3);
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .contact-form textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icons a {
+            color: #00f6ff;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+
+        .social-icons a:hover {
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            h1, h2 {
+                font-size: 2rem;
+            }
+
+            nav ul li {
+                margin: 0 0.5rem;
+            }
+
+            nav ul li a {
+                font-size: 1rem;
+            }
+
+            .service-card,
+            .project-card {
+                width: 100%;
+            }
+
+            #contact {
+                flex-direction: column;
+            }
+
+            #about {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            #about .about-content {
+                text-align: center;
+            }
+
+            #about .about-content p {
+                text-align: center;
+            }
+
+            .skills-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .skill-category h3 {
+                text-align: center;
+            }
+
+            .skill-bar p {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <section id="home">
+        <h1>Welcome to My Portfolio</h1>
+        <p>I am Adda Saranya, a passionate frontend developer specializing in creating responsive and user-friendly web applications.</p>
+        <a href="#about" class="btn">Learn More</a>
+    </section>
+
+    <section id="about">
+        <!-- Replace the src attribute below with your actual image URL or file path -->
+        <img src="saranya pic.jpg" alt="Profile Picture">
+        <div class="about-content">
+            <h2>About Me</h2>
+            <h3>Frontend Developer!</h3>
+            <p>I am a skilled frontend developer with a strong foundation in building responsive, user-friendly web applications. My expertise lies in React.js, JavaScript, and modern UI/UX principles. I am passionate about developing high-performance web interfaces and optimizing user experience. With a solid background in HTML, CSS, and state management, I excel at collaborating in agile teams and integrating RESTful APIs. I strive to create intuitive and seamless browsing experiences, ensuring that my designs meet client expectations and align with their brand identity.</p>
+            <a href="#contact" class="btn">More About Me</a>
+        </div>
+    </section>
+
+    <section id="services">
+        <h2>My Services</h2>
+        <div class="service-container">
+            <div class="service-card">
+                <i>💻</i>
+                <h3>UI/UX Design</h3>
+                <p>Results-driven frontend developer skilled in building responsive, user-friendly web applications using modern UI/UX principles.</p>
+                <a href="#" class="btn">Learn More</a>
+            </div>
+            <div class="service-card">
+                <i>🌐</i>
+                <h3>Web Design</h3>
+                <p>Proficient in creating high-performance web interfaces with a focus on optimizing user experience and responsive design.</p>
+                <a href="#" class="btn">Learn More</a>
+            </div>
+            <div class="service-card">
+                <i>📱</i>
+                <h3>App Design</h3>
+                <p>Skilled in designing mobile app interfaces with React.js, ensuring seamless integration and user-friendly experiences.</p>
+                <a href="#" class="btn">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills">
+        <h2>My Skills</h2>
+        <div class="skills-container">
+            <div class="skill-category">
+                <h3>Technical Skills</h3>
+                <div class="skill-bar">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/61/HTML5_logo_and_wordmark.svg" alt="HTML">
+                    <p>HTML</p>
+                    <div class="bar"><div style="width: 90%;"></div></div>
+                    <span>90%</span>
+                </div>
+                <div class="skill-bar">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/CSS3_logo.svg/800px-CSS3_logo.svg.png" alt="CSS">
+                    <p>CSS</p>
+                    <div class="bar"><div style="width: 85%;"></div></div>
+                    <span>85%</span>
+                </div>
+                <div class="skill-bar">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png" alt="JavaScript">
+                    <p>JavaScript</p>
+                    <div class="bar"><div style="width: 80%;"></div></div>
+                    <span>80%</span>
+                </div>
+                <div class="skill-bar">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" alt="Python">
+                    <p>Python</p>
+                    <div class="bar"><div style="width: 70%;"></div></div>
+                    <span>70%</span>
+                </div>
+                <div class="skill-bar">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" alt="React">
+                    <p>React</p>
+                    <div class="bar"><div style="width: 75%;"></div></div>
+                    <span>75%</span>
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3>Professional Skills</h3>
+                <div class="circle-container">
+                    <div class="circle">90%<br><span>Creativity</span></div>
+                    <div class="circle">85%<br><span>Communication</span></div>
+                    <div class="circle">80%<br><span>Problem Solving</span></div>
+                    <div class="circle">85%<br><span>Teamwork</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2>My Projects</h2>
+        <div class="project-container">
+            <div class="project-card">
+                <h3>Privacy-Preserving Authentication</h3>
+                <p>Blockchain-based Zero-Knowledge Proof (ZKP) authentication system for truck platooning networks. Enhances privacy and security using Blockchain, ZKP, Python, and Solidity.</p>
+            </div>
+            <div class="project-card">
+                <h3>Cloud IDE</h3>
+                <p>An online IDE with real-time syntax highlighting and file management. Features code execution and collaboration using React.js, Node.js, and WebSockets.</p>
+            </div>
+            <div class="project-card">
+                <h3>Aquarium with OpenGL</h3>
+                <p>A 3D animated aquarium simulation with realistic fish movement and dynamic water effects, built using C++, OpenGL, and GLUT.</p>
+            </div>
+            <div class="project-card">
+                <h3>Lil' Tiptoes</h3>
+                <p>A responsive e-commerce platform for children's footwear with product filtering and secure payment integration, built using React.js and Tailwind CSS.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="contact-info">
+            <h2>Contact Me</h2>
+            <h3>Let's Work Together</h3>
+            <p>I'm excited to collaborate on innovative projects. Reach out to discuss opportunities or ideas!</p>
+            <p>Email: <a href="mailto:saranyaadda7@gmail.com">saranyaadda7@gmail.com</a></p>
+            <p>Phone: <a href="tel:+918125699631">+918125699631</a></p>
+            <div class="social-icons">
+                <a href="https://www.linkedin.com/in/saranya-adda-668190348" target="_blank"><i class='bx bxl-linkedin'></i></a>
+                <a href="https://github.com/saruuuuuu" target="_blank"><i class='bx bxl-github'></i></a>
+            </div>
+        </div>
+        <div class="contact-form">
+            <input type="text" placeholder="Enter Your Name" id="name">
+            <input type="email" placeholder="Enter Your Email" id="email">
+            <input type="text" placeholder="Enter Your Subject" id="subject">
+            <textarea placeholder="Enter Your Message" id="message"></textarea>
+            <button class="btn" onclick="alert('Message sent!')">Submit</button>
+        </div>
+    </section>
+</body>
+</html>
